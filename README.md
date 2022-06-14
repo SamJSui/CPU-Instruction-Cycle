@@ -1,1 +1,1 @@
-# CPU-Instruction-Cycle
+# CPU Instruction Cycle
