@@ -6,7 +6,7 @@ main: assembly
 	$(CC) $(CFLAGS) -o decode ./src/*.cpp
 
 assembly: 
-	nasm -f elf64 -o binary ./tests/helloworld.asm
+	nasm -o binary ./tests/helloworld.asm
 
 run: main
 	./decode binary

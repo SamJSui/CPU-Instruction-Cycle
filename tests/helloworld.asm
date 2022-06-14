@@ -1,5 +1,4 @@
-section .data
 section .text
-    push rbp
-    mov rbp, rsp
-    mov rbp, rax
+push bx
+mov al, 0x0e
+pop bx

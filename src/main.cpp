@@ -1,9 +1,4 @@
 #include "CPU.h"
-#include <fstream>
-#include <iostream>
-#include <iomanip>
-#include <stdlib.h>
-#include <stdio.h>
 
 int main(int argc, char **argv){
 
@@ -22,19 +17,22 @@ int main(int argc, char **argv){
     // File Size
     ifs.seekg (0, ifs.end); // Goes to last byte
     int file_size = ifs.tellg();
-    if (file_size % 4 != 0){
-        std::cerr << "invalid file size\n";
-        return -1;
-    }
+    // if (file_size % 4 != 0){
+    //     std::cerr << "invalid file size\n";
+    //     return -1;
+    // }
     ifs.clear(); // Clear error flags and return back to top of file for reading
     ifs.seekg (0, ifs.beg); 
 
     char* buffer = new char[MEM_SIZE]; // Initialize and read in binary file into char buffer
+    memset(buffer, 0, MEM_SIZE);
     ifs.read(buffer, file_size);
 
     Machine mach(buffer, MEM_SIZE);
     while (mach.get_pc() < file_size) {
-    
+        mach.fetch();
+        std::cout << mach.debug_fetch_out() << '\n';
+        mach.set_pc(mach.get_pc() + 1);
     }
 
     printf("%s\n", "IT WORKS");
