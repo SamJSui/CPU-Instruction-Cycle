@@ -16,26 +16,22 @@ int main(int argc, char **argv){
     
     // File Size
     ifs.seekg (0, ifs.end); // Goes to last byte
-    int file_size = ifs.tellg();
-    // if (file_size % 4 != 0){
-    //     std::cerr << "invalid file size\n";
-    //     return -1;
-    // }
+    int fileSize = ifs.tellg();
     ifs.clear(); // Clear error flags and return back to top of file for reading
     ifs.seekg (0, ifs.beg); 
 
     char* buffer = new char[MEM_SIZE]; // Initialize and read in binary file into char buffer
-    memset(buffer, 0, MEM_SIZE);
-    ifs.read(buffer, file_size);
+    ifs.read(buffer, fileSize);
 
     Machine mach(buffer, MEM_SIZE);
-    while (mach.get_pc() < file_size) {
+    while (mach.get_pc() < fileSize) {
         mach.fetch();
         std::cout << mach.debug_fetch_out() << '\n';
+        mach.decode();
+        std::cout << mach.debug_decode_out() << '\n';
         mach.set_pc(mach.get_pc() + 1);
     }
 
-    printf("%s\n", "IT WORKS");
     ifs.close();
     delete[] buffer;
     return 0;

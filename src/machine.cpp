@@ -8,7 +8,6 @@ template<typename T>
 T Machine::memory_read(int64_t address) const {
     return *reinterpret_cast<T*>(memory + address);
 }
-
 // Write to the internal memory
 // Usage:
 // memory_write<int>(0, 0xdeadbeef); // Set bytes 0, 1, 2, 3 to 0xdeadbeef
@@ -18,26 +17,21 @@ void Machine::memory_write(int64_t address, T value) {
     *reinterpret_cast<T*>(memory + address) = value;
 }  
 
-Machine::Machine(char *mem, int size){
-    memory = mem;
+Machine::Machine(char *buffer, int size){
+    memory = buffer;
     memorySize = size;
     programCounter = 0;
-    set_xreg(2, memorySize);
 }
-
 int64_t Machine::get_pc() const {
     return programCounter;
 }
-
 void Machine::set_pc(int64_t new_PC) {
     programCounter = new_PC;
 }
-
 int64_t Machine::get_xreg(int reg) const {
     reg &= 0x1f; // Make sure the register number is 0 - 31
     return registers[reg];
 }
-
 void Machine::set_xreg(int reg, int64_t value) {
     reg &= 0x1f;
     registers[reg] = value;
@@ -47,9 +41,17 @@ void Machine::set_xreg(int reg, int64_t value) {
 
 // FETCH
 void Machine::fetch() {
-    fetchObj.instruction = memory_read<uint16_t>(programCounter);
+    fetchObj.instruction = memory_read<uint8_t>(programCounter);
 }
-
 Machine::Fetch &Machine::debug_fetch_out() { 
     return fetchObj; 
+}
+
+// DECODE
+
+void Machine::decode() {
+    
+}
+Machine::Decode &Machine::debug_decode_out() { 
+    return decodeObj; 
 }
