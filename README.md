@@ -45,8 +45,12 @@ A C++ program written to simulate a CPU and its instruction cycle:
 
 ### Supported Instructions
 
+- inc
 - mov
-- 
+- cmp
+- jmp
+- int
+- je
 
 ### Notes
 

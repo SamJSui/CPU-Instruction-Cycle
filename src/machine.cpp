@@ -87,7 +87,7 @@ Machine::Decode &Machine::debug_decode_out() {
 
 // EXECUTE
 void Machine::execute() {
-
+    
 }
 Machine::Execute &Machine::debug_execute_out() { 
     return executeObj; 
