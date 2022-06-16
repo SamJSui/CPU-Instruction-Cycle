@@ -22,6 +22,8 @@ A C++ program written to simulate a CPU and its instruction cycle:
     - `sudo apt install g++`
 - nasm
     - `sudo apt install nasm`
+- qemu (optional)
+    - `sudo apt install aqemu`
 
 ### Install
 
@@ -30,11 +32,23 @@ A C++ program written to simulate a CPU and its instruction cycle:
 2. cd into the directory 
     - `cd CPU-Instruction-Cycle`
 
-### Usage
+## **Usage**
 
 - `make` 
     - Compiles the `.cpp` files in `/src/`
 - `make run`
     - Compiles the `.cpp` files in `/src/`, assembles the `.asm` file(s) in `/tests/`, and runs the program
-- `make debug`
-    - Assembles the `.asm` file(s) in `/tests/` and provides the instructions from the output file in hex, printing it to the terminal
+        - By default, the makefile is set to assemble `/tests/hello_world_example.asm` into `a.out`
+- `make qemu`
+    - Assembles the `.asm` file(s) in `/tests/` and runs the program through qemu, a machine's processor emulator
+        - With the case of the `hello_world_example`, `a.out` becomes a boot sector that prints: "Hello, World!"
+
+### Supported Instructions
+
+- mov
+- 
+
+### Notes
+
+- **x86 Assembly**
+    - Moving an immediate into a 16-Bit Register will be treated like an address
