@@ -4,12 +4,18 @@
 #include <iomanip>
 #include <sstream>
 #include <cstring>
+#include <unordered_map>
 
 #ifndef MACHINE_H
 #define MACHINE_H
 
 const int MEM_SIZE = 1 << 18; // 262144
 const int NUM_REGS = 16;
+
+const std::string reg[] {
+    "al", "cl", "dl", "bl", "ah", "ch", "dh", "bh", // 8-Bit Registers
+    "ax", "cx", "dx", "bx", "sp", "bp", "si", "di"  // 16-Bit Registers
+};
 
 class Machine {
     char* memory; // Memory
@@ -20,32 +26,26 @@ class Machine {
     // INSTRUCTION CYCLE 
 
     struct Fetch{
-        uint32_t instruction;
+        uint16_t xInstruction;
+
         friend std::ostream& operator<<(std::ostream &out, const Fetch &fo){
             std::ostringstream sout;
-            sout << "0x" << std::hex << std::setw(2) << std::setfill('0') << fo.instruction;
+            sout << "0x" << std::hex << std::setw(2) << std::setfill('0') << fo.xInstruction;
             return out << sout.str();
         }
     };
 
     struct Decode{
-        uint32_t opcode;
-        int32_t immediate;
-        uint8_t reg1;
-        uint8_t reg2;
+        std::string instruction;
+        int16_t immediate;
+        uint16_t reg1;
+        uint16_t reg2;
+
         friend std::ostream &operator<<(std::ostream &out, const Decode &dec) {
             std::ostringstream sout;
-            // sout << "Operation: ";
-            // switch (dec.op) {
-
-            // }
-            // sout << '\n';
-            // sout << "RD       : " << (uint32_t)dec.rd << '\n';
-            // sout << "funct3   : " << (uint32_t)dec.funct3 << '\n';
-            // sout << "funct7   : " << (uint32_t)dec.funct7 << '\n';
-            // sout << "offset   : " << dec.offset << '\n';
-            // sout << "left     : " << dec.left_val << '\n';
-            // sout << "right    : " << dec.right_val;
+            sout << "Instruction: " << std::hex << dec.instruction << '\n';
+            sout << "Register 1: " << reg[dec.reg1] << '\n';
+            sout << "Immediate: 0x" << std::hex << std::setw(2) << std::setfill('0') << dec.immediate << '\n';
             return out << sout.str();
         }
     };
@@ -54,16 +54,18 @@ class Machine {
     Decode decodeObj;
 
     template<typename T>
-    T memory_read(int64_t address) const;
+    T memory_read(int16_t) const;
     template<typename T>
-    void memory_write(int64_t address, T value);
+    void memory_write(int16_t, T);
+    template<typename T>
+    T next_byte();
 
     public: 
         Machine(char *, int);
         int64_t get_pc() const;
-        void set_pc(int64_t);
+        void set_pc(int16_t);
         int64_t get_xreg(int) const;
-        void set_xreg(int, int64_t);
+        void set_xreg(int, int16_t);
 
         void fetch();
         void decode();
