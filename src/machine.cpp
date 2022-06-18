@@ -21,13 +21,13 @@ Machine::Machine(char *buffer, int size) {
     memorySize = size;
     programCounter = 0;
 }
-int64_t Machine::get_pc() const {
+int16_t Machine::get_pc() const {
     return programCounter;
 }
 void Machine::set_pc(int16_t new_PC) {
     programCounter = new_PC;
 }
-int64_t Machine::get_xreg(int which) const {
+int16_t Machine::get_xreg(int which) const {
     which &= 0x1f; // Make sure the register number is 0 - 31
     return registers[which];
 }
@@ -87,13 +87,13 @@ void Machine::decode() {
             case 0x01:
             case 0x02:
             case 0x03:
-                decodeObj.leftOperand = registers[decodeObj.reg1] & 0xff; 
+                decodeObj.leftOperand = get_xreg(decodeObj.reg1) & 0xff; 
                 break;
             case 0x04: // Upper-Byte Registers
             case 0x05:
             case 0x06:
             case 0x07:
-                decodeObj.leftOperand = (registers[decodeObj.reg1] >> 8) & 0xff; 
+                decodeObj.leftOperand = (get_xreg(decodeObj.reg1) >> 8) & 0xff; 
                 break;
         }
         decodeObj.rightOperand = 1;
@@ -103,7 +103,7 @@ void Machine::decode() {
         decodeObj.immediate = fetchObj.opcode - 0x40;
         fetchObj.opcode &= 0x40;
         decodeObj.reg1 = decodeObj.immediate;
-        decodeObj.leftOperand = registers[decodeObj.reg1];
+        decodeObj.leftOperand = get_xreg(decodeObj.reg1);
         decodeObj.rightOperand = 1;
     }
     else if ( (fetchObj.opcode & 0xb0) == 0xb0) {           // mov rb, imm16
@@ -120,7 +120,7 @@ void Machine::decode() {
         decodeObj.instruction = "cmp";
         decodeObj.reg1 = 0;
         decodeObj.immediate = next_byte<int8_t>();
-        decodeObj.leftOperand = (registers[decodeObj.reg1] & 0xff); 
+        decodeObj.leftOperand = (get_xreg(decodeObj.reg1) & 0xff); 
         decodeObj.rightOperand = decodeObj.immediate;     
     }
     else if ( (fetchObj.opcode & 0xeb) == 0xeb) {           // jmp rel8
@@ -179,7 +179,7 @@ void Machine::decode() {
         decodeObj.instruction = "add";
         decodeObj.immediate = next_byte<int8_t>();
         decodeObj.reg1 = 0;
-        decodeObj.leftOperand = (registers[decodeObj.reg1] & 0xff); 
+        decodeObj.leftOperand = (get_xreg(decodeObj.reg1) & 0xff); 
         decodeObj.rightOperand = decodeObj.immediate;
     }
 }

@@ -113,9 +113,9 @@ class Machine {
     public: 
         // CPU
         Machine(char *, int);
-        int64_t get_pc() const;
+        int16_t get_pc() const;
         void set_pc(int16_t);
-        int64_t get_xreg(int) const;
+        int16_t get_xreg(int) const;
         void set_xreg(int, int16_t);
         
         // INSTRUCTION CYCLE
