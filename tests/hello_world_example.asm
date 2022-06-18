@@ -1,17 +1,25 @@
 BITS 16
 
-section .text
-main:
-    mov ah, 0x0e ; tty mode
-    je main
+; mov bx, TEST
+add bx, 0x7c00
+add cx, 0x7c00
+add dx, 0x7c00
 
-; Boot Sector 
-; times 510 - ($-$$) db 0
-; dw 0xaa55 
+; main:
+;     mov al, [bx]
+;     cmp al, 0
+;     je done
+;     mov ah, 0x0e ; tty mode
+;     int 0x10
+;     inc bx
+    
+;     jmp main
 
-; section .data
-; Success: 
-;     db 'Hello, world', 0 ; Allocating space for our array of bytes (chars) and adding a null byte at the end
-; Test:
-;     dw 0xdead
-;     db 0x0
+; ; Boot Sector 
+
+; TEST:
+;     db 'A', 0
+
+; done:
+;     times 510 - ($-$$) db 0
+;     dw 0xaa55 

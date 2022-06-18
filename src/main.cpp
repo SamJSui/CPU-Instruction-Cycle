@@ -1,15 +1,14 @@
 #include "CPU.h"
 
 int main(int argc, char **argv){
-
-    if(argc < 2){
+    if (argc < 2) {
         std::cerr << "include file\n";
         return 1; 
     }
 
     char* bin_file = argv[1]; // Reads the command-line argument into a char buffer
     std::ifstream ifs (bin_file, std::ios::binary);
-    if (!(ifs.is_open())){ // Ends program if the binary file does not open
+    if (!(ifs.is_open())) { // Ends program if the binary file does not open
         std::cerr << "invalid file type\n";
         return 1;
     }
@@ -29,6 +28,8 @@ int main(int argc, char **argv){
         std::cout << mach.debug_fetch_out() << '\n';
         mach.decode();
         std::cout << mach.debug_decode_out() << '\n';
+        mach.execute();
+        std::cout << mach.debug_execute_out() << '\n';
         mach.set_pc(mach.get_pc() + 1);
     }
 
