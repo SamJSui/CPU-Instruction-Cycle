@@ -1,5 +1,4 @@
 #include "machine.h"
-#include <bitset>
 
 // MEMORY
 template<typename T>

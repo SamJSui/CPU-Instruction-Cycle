@@ -3,7 +3,6 @@
 #include <iomanip>
 #include <sstream>
 #include <climits>
-#include <stdlib.h>
 
 #ifndef MACHINE_H
 #define MACHINE_H
@@ -84,15 +83,15 @@ class Machine {
         }
     };
 
-    struct Memory {
-        int16_t value;
-    };
+    // struct Memory {
+    //     int16_t value;
+    // };
 
     // Objects
     Fetch fetchObj;
     Decode decodeObj;
     Execute executeObj;
-    Memory memoryObj;
+    // Memory memoryObj;
 
     // Memory
     template<typename T>
@@ -126,11 +125,11 @@ class Machine {
         void fetch();
         void decode();
         void execute();
-        void memory_access();
+        // void memory_access();
         void write_back();
         Fetch &debug_fetch_out();
         Decode &debug_decode_out();
-        Execute &debug_execute_out();
+        // Execute &debug_execute_out();
         Memory &debug_memory_out();
 };
 
