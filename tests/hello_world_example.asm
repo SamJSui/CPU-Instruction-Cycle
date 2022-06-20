@@ -20,6 +20,6 @@ main:
 ; ; Boot Sector 
 
 TEST:
-    db 'B', 0
+    db 'Hello, World!', 0
 done:
      

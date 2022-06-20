@@ -12,7 +12,7 @@ const int MEM_SIZE = 1 << 18; // 262144
 const int NUM_REGS = 16;
 const int EFLAGS_REG = 14;
 
-const std::string reg[] {
+const std::string reg_name[] {
     "AL", "CL", "DL", "BL", "AH", "CH", "DH", "BH", // 8-Bit Registers
     "AX", "CX", "DX", "BX", "SP", "BP", "SI", "DI", // 16-Bit Registers
     "NO REG"
@@ -55,16 +55,15 @@ class Machine {
     struct Decode {
         std::string instruction;
         int16_t immediate;
-        uint16_t reg1;
-        uint16_t register1;
-        uint16_t reg2;
-        uint16_t leftOperand;
-        uint16_t rightOperand;
+        uint16_t reg;
+        uint16_t regi;
+        int16_t leftOperand;
+        int16_t rightOperand;
 
         friend std::ostream &operator<<(std::ostream &out, const Decode &dec) {
             std::ostringstream sout;
             sout << "Instruction: " << std::hex << dec.instruction << '\n';
-            sout << "Register 1: " << reg[dec.reg1] << '\n';
+            sout << "Register 1: " << reg_name[dec.reg] << '\n';
             sout << "Immediate: 0x" << std::hex << std::setw(2) << std::setfill('0') << dec.immediate << '\n';
             sout << "Left Operand: " << std::dec << dec.leftOperand << '\n';
             sout << "Right Operand: " << std::dec << dec.rightOperand;
@@ -80,7 +79,7 @@ class Machine {
             if (exe.result == 0xff) {
                 sout << "NO ALU" << '\n';
             }
-            else sout << std::hex << exe.result << '\n';
+            else sout << std::dec << exe.result << '\n';
             return out << sout.str();
         }
     };
@@ -100,9 +99,8 @@ class Machine {
     T memory_read(int16_t) const;
     template<typename T>
     void memory_write(int16_t, T);
-    uint8_t next_byte();
+    int8_t next_byte();
     void byte_to_word(int16_t*);
-    int16_t dereference_address(int16_t);
     
     // EFLAGS
     void set_carry_flag();

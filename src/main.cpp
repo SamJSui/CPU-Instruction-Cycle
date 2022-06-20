@@ -25,11 +25,11 @@ int main(int argc, char **argv){
     Machine mach(buffer, MEM_SIZE);
     while (mach.get_pc() < fileSize) {
         mach.fetch();
-        std::cout << mach.debug_fetch_out() << '\n';
+        // std::cout << mach.debug_fetch_out() << '\n';
         mach.decode();
-        std::cout << mach.debug_decode_out() << '\n';
+        // std::cout << mach.debug_decode_out() << '\n';
         mach.execute();
-        std::cout << mach.debug_execute_out() << '\n';
+        // std::cout << mach.debug_execute_out() << '\n';
         mach.write_back();
         mach.set_pc(mach.get_pc() + 1);
     }
