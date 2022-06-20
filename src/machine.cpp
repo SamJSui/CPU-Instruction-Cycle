@@ -1,4 +1,5 @@
 #include "machine.h"
+#include <bitset>
 
 // MEMORY
 template<typename T>
@@ -9,10 +10,12 @@ template<typename T>
 void Machine::memory_write(int16_t address, T value) {
     *reinterpret_cast<T*>(memory + address) = value;
 }  
-template<typename T>
 uint8_t Machine::next_byte() {
     set_pc(get_pc() + 1);
     return *reinterpret_cast<uint8_t*>(memory + get_pc());
+}
+void Machine::byte_to_word(int16_t *immediate){
+    *immediate = (*immediate) | (next_byte() << 8);
 }
 
 // CPU
@@ -34,6 +37,27 @@ int16_t Machine::get_xreg(int which) const {
 void Machine::set_xreg(int which, int16_t value) {
     which &= 0x1f;
     registers[which] = value;
+}
+int16_t Machine::reg_to_register(uint16_t* reg){
+    switch (*reg){
+        case 0:     // al
+        case 4:     // ah
+        case 8:     // ax
+            return 0;
+        case 1:     // cl
+        case 5:     // ch
+        case 9:     // cx
+            return 1;
+        case 2:     // dl
+        case 6:     // dh
+        case 10:    // dx
+            return 2;
+        case 3:     // bl
+        case 7:     // bh
+        case 11:    // bx
+            return 3;
+    }
+    return 0;
 }
 
 // EFLAGS
@@ -69,6 +93,7 @@ bool Machine::check_sign_flag(){
 
 // FETCH
 void Machine::fetch() {
+    std::cout << '<' << get_pc() << "> ";
     fetchObj.opcode = memory_read<uint8_t>(programCounter);
 }
 Machine::Fetch &Machine::debug_fetch_out() { 
@@ -77,109 +102,106 @@ Machine::Fetch &Machine::debug_fetch_out() {
 
 // DECODE
 void Machine::decode() {
-    if ( (fetchObj.opcode & 0xfe) == 0xfe) {            // inc r8
-        fetchObj.opcode &= 0xfe;
+    if (fetchObj.opcode == 0x04) {                  // add al, imm8
+        decodeObj.instruction = "add";
+        decodeObj.rightOperand = decodeObj.immediate = next_byte();
+        decodeObj.reg1 = 0; // AL
+        decodeObj.register1 = 0; // AX - registers[0]
+        decodeObj.leftOperand = (get_xreg(0) & 0xff); 
+    }
+    else if (fetchObj.opcode == 0x81) {             // add rw, imm16
+        decodeObj.instruction = "add";
+        decodeObj.reg1 = next_byte() - 0xc0 + 8;
+        decodeObj.register1 = reg_to_register(&decodeObj.reg1);
+        decodeObj.immediate = next_byte();
+        byte_to_word(&decodeObj.immediate);
+        decodeObj.leftOperand = get_xreg(decodeObj.register1);
+        decodeObj.rightOperand = decodeObj.immediate;
+    }
+    else if (fetchObj.opcode == 0x3c) {             // cmp al, imm16
+        decodeObj.instruction = "cmp";
+        decodeObj.reg1 = 0;
+        decodeObj.register1 = reg_to_register(&decodeObj.reg1);
+        decodeObj.immediate = next_byte();
+        decodeObj.leftOperand = (get_xreg(decodeObj.register1) & 0xff);   
+        decodeObj.rightOperand = decodeObj.immediate;
+    }
+    else if (fetchObj.opcode == 0xfe) {             // inc r8
         decodeObj.instruction = "inc";
-        decodeObj.immediate = next_byte<int8_t>();
+        decodeObj.immediate = next_byte();
         decodeObj.reg1 = decodeObj.immediate - 0xc0;
+        decodeObj.register1 = reg_to_register(&decodeObj.reg1);
         switch (decodeObj.reg1){
             case 0x00: // Lower-Byte Registers
             case 0x01:
             case 0x02:
             case 0x03:
-                decodeObj.leftOperand = get_xreg(decodeObj.reg1) & 0xff; 
+                decodeObj.leftOperand = get_xreg(decodeObj.register1) & 0xff; 
                 break;
             case 0x04: // Upper-Byte Registers
             case 0x05:
             case 0x06:
             case 0x07:
-                decodeObj.leftOperand = (get_xreg(decodeObj.reg1) >> 8) & 0xff; 
+                decodeObj.leftOperand = (get_xreg(decodeObj.register1) >> 8) & 0xff; 
                 break;
         }
         decodeObj.rightOperand = 1;
     }
-    else if ( (fetchObj.opcode & 0x40) == 0x40) {            // inc r16
+    else if (fetchObj.opcode== 0xcd) {              // int imm8
+        decodeObj.instruction = "int";
+        decodeObj.reg1 = 16;
+        decodeObj.immediate = next_byte();      
+    }
+    else if ( (fetchObj.opcode & 0x40) == 0x40) {   // inc rw
         decodeObj.instruction = "inc";
         decodeObj.immediate = fetchObj.opcode - 0x40;
         fetchObj.opcode &= 0x40;
         decodeObj.reg1 = decodeObj.immediate;
-        decodeObj.leftOperand = get_xreg(decodeObj.reg1);
+        decodeObj.register1 = reg_to_register(&decodeObj.reg1);
+        decodeObj.reg1 = decodeObj.register1;
+        decodeObj.leftOperand = get_xreg(decodeObj.register1);
         decodeObj.rightOperand = 1;
     }
-    else if ( (fetchObj.opcode & 0xb0) == 0xb0) {           // mov rb, imm16
-        decodeObj.reg1 = fetchObj.opcode - 0xb0;
-        fetchObj.opcode &= 0xb0;
-        decodeObj.instruction = "mov";
-        decodeObj.immediate = next_byte<int8_t>();
-        if (decodeObj.reg1 > 7){                            // mov rw, rw
-            decodeObj.immediate = ((decodeObj.immediate << 8) | next_byte<uint8_t>());
-        }
-    }
-    else if ( (fetchObj.opcode & 0x3c) == 0x3c) {           // cmp al, imm16
-        fetchObj.opcode &= 0x3c;
-        decodeObj.instruction = "cmp";
-        decodeObj.reg1 = 0;
-        decodeObj.immediate = next_byte<int8_t>();
-        decodeObj.leftOperand = (get_xreg(decodeObj.reg1) & 0xff); 
-        decodeObj.rightOperand = decodeObj.immediate;     
-    }
-    else if ( (fetchObj.opcode & 0xeb) == 0xeb) {           // jmp rel8
-        fetchObj.opcode &= 0xeb;
-        decodeObj.instruction = "jmp";
-        decodeObj.immediate = next_byte<int8_t>();
-        decodeObj.leftOperand = get_pc();
-        decodeObj.rightOperand = decodeObj.immediate;
-    }
-    else if ( (fetchObj.opcode & 0xcd) == 0xcd) {           // int imm8
-        fetchObj.opcode &= 0xcd;
-        decodeObj.instruction = "int";
-        decodeObj.reg1 = 16;
-        decodeObj.immediate = next_byte<int8_t>();      
-    }
-    else if ( (fetchObj.opcode & 0x74) == 0x74) {           // je imm8
-        fetchObj.opcode &= 0x74;
+    else if (fetchObj.opcode == 0x74) {             // je imm8
         decodeObj.instruction = "je";
         decodeObj.reg1 = 16;
-        decodeObj.immediate = next_byte<int8_t>();
+        decodeObj.immediate = next_byte();
         decodeObj.leftOperand = get_pc(); 
         decodeObj.rightOperand = decodeObj.immediate;
     }
-    else if ( (fetchObj.opcode & 0x81) == 0x81) {           // add rw, imm16
-        fetchObj.opcode &= 0x81;
-        decodeObj.instruction = "add";
-        decodeObj.reg1 = next_byte<int8_t>() - 0xc0;
-        decodeObj.immediate = next_byte<int8_t>();
-        decodeObj.immediate = ((decodeObj.immediate << 8) | next_byte<uint8_t>());
-        switch (decodeObj.reg1) {
-            case 0:
-            case 4:
-                decodeObj.reg1 = 8;
-                decodeObj.leftOperand = registers[8];
-                break;
-            case 1:
-            case 5:
-                decodeObj.reg1 = 9;
-                decodeObj.leftOperand = registers[9];
-                break;
-            case 2:
-            case 6:
-                decodeObj.reg1 = 10;
-                decodeObj.leftOperand = registers[10];
-                break;
-            case 3:
-            case 7:
-                decodeObj.reg1 = 11;
-                decodeObj.leftOperand = registers[11];
-                break;
-        } 
+    else if (fetchObj.opcode == 0xeb) {             // jmp rel8
+        decodeObj.instruction = "jmp";
+        decodeObj.immediate = next_byte();
+        decodeObj.leftOperand = get_pc();
         decodeObj.rightOperand = decodeObj.immediate;
     }
-    else if ( (fetchObj.opcode & 0x04) == 0x04) {           // add al, imm8
-        fetchObj.opcode &= 0x04;
-        decodeObj.instruction = "add";
-        decodeObj.immediate = next_byte<int8_t>();
-        decodeObj.reg1 = 0;
-        decodeObj.leftOperand = (get_xreg(decodeObj.reg1) & 0xff); 
+    else if ((fetchObj.opcode & 0xb0) == 0xb0) {   // mov rb, imm16
+        decodeObj.reg1 = fetchObj.opcode - 0xb0;     
+        fetchObj.opcode &= 0xb0;
+        decodeObj.instruction = "mov";
+        decodeObj.immediate = next_byte();
+        if (decodeObj.reg1 > 7){                    // mov rw, rw
+            byte_to_word(&decodeObj.immediate);
+        }
+        decodeObj.register1 = reg_to_register(&decodeObj.reg1);
+        decodeObj.rightOperand = decodeObj.immediate;
+    }
+    else if (fetchObj.opcode == 0x8a){
+        decodeObj.instruction = "mov";              // mov rb, [m8]
+        decodeObj.immediate = next_byte();
+        switch (decodeObj.immediate % 8){
+            // [bx]
+            case 7:
+                decodeObj.reg1 = decodeObj.immediate % 7; 
+                decodeObj.immediate = memory_read<uint8_t>(get_xreg(3));
+                break;
+            // [si]
+            case 4:
+                decodeObj.reg1 = (decodeObj.immediate - 4) / 4 - 1;
+                break;
+        }
+        decodeObj.register1 = reg_to_register(&decodeObj.reg1);
+        decodeObj.leftOperand = get_xreg(decodeObj.register1);
         decodeObj.rightOperand = decodeObj.immediate;
     }
 }
@@ -190,30 +212,27 @@ Machine::Decode &Machine::debug_decode_out() {
 // EXECUTE
 void Machine::execute() {
     switch (fetchObj.opcode){
+        case 0x81:      // add rw, imm16
+            executeObj.result = decodeObj.leftOperand + decodeObj.rightOperand;
+            break;
         case 0xfe:      // inc rb
             executeObj.result = decodeObj.leftOperand + decodeObj.rightOperand;
             if (executeObj.result > SHRT_MAX) {
                 set_carry_flag();
             }
             break;
-        case 0xb0:      // mov rb
-            break;
         case 0x3c:      // cmp al, imm16
             executeObj.result = decodeObj.leftOperand - decodeObj.rightOperand;
-            if (executeObj.result == 0) set_zero_flag();
-            else if (executeObj.result < 0) set_sign_flag();
-            else set_carry_flag();
             break;
         case 0xeb:      // jmp rel8
             executeObj.result = decodeObj.leftOperand - decodeObj.rightOperand;
             break;
-        case 0xcd:      // int imm8
-            break;
         case 0x74:      // je imm8
-            if (check_zero_flag()) executeObj.result = decodeObj.leftOperand - decodeObj.rightOperand;
+            executeObj.result = decodeObj.leftOperand - decodeObj.rightOperand;
             break;
-        case 0x81:      // add rw, imm16
-            executeObj.result = decodeObj.leftOperand + decodeObj.rightOperand;
+        case 0xb0:      // mov rb, imm8
+            executeObj.result = decodeObj.immediate;
+            break;
     }
 }
 Machine::Execute &Machine::debug_execute_out() { 
@@ -222,7 +241,6 @@ Machine::Execute &Machine::debug_execute_out() {
 
 // MEMORY
 void Machine::memory_access() {
-
 }
 Machine::Memory &Machine::debug_memory_out() { 
     return memoryObj; 
@@ -230,5 +248,60 @@ Machine::Memory &Machine::debug_memory_out() {
 
 // WRITEBACK
 void Machine::write_back() {
-
+    switch (fetchObj.opcode) {
+        case 0x81:      // add rw, imm16
+            set_xreg(decodeObj.reg1, executeObj.result);
+            break;
+        case 0x3c:      // cmp al, imm16
+            if (executeObj.result == 0) set_zero_flag();
+            else if (executeObj.result < 0) set_sign_flag();
+            else set_carry_flag();
+            break;
+        case 0xfe:      // inc rb
+            set_xreg(decodeObj.reg1, executeObj.result); 
+            break;
+        case 0xcd:      // int imm8
+            if (decodeObj.immediate == 0x10) { 
+                if ( (get_xreg(decodeObj.register1) >> 8) == 0x0e ) {
+                    putchar( (get_xreg(decodeObj.register1) & 0xff) );
+                }
+            }
+            break;
+        case 0xeb:      // jmp rel8
+            set_pc(executeObj.result);
+            break;
+        case 0x74:      // je imm8
+            if (check_zero_flag()) set_pc(executeObj.result);
+            break;
+        case 0x8a:      // mov rb, m8
+            set_xreg(decodeObj.register1, 
+                            (get_xreg(decodeObj.register1) & 0xff00)
+                            | decodeObj.immediate);
+            break;
+        case 0xb0:      // mov rb, imm8
+            if (decodeObj.reg1 > 7){ // 16-Bit Immediate
+                set_xreg(decodeObj.register1, executeObj.result);
+            }
+            else{
+                switch (decodeObj.reg1){
+                case 0: // Lower 8-Bit Registers
+                case 1:
+                case 2:
+                case 3:
+                    set_xreg(decodeObj.register1, 
+                            (get_xreg(decodeObj.register1) & 0xff00)
+                            | executeObj.result);
+                    break;
+                case 4: // Upper 8-Bit Registers
+                case 5:
+                case 6:
+                case 7:
+                    set_xreg(decodeObj.register1, 
+                            (get_xreg(decodeObj.register1) & 0x00ff)
+                            | (executeObj.result << 8));
+                    break;
+                }
+            }
+            break;
+    }
 }

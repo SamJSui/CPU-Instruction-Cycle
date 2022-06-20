@@ -30,6 +30,7 @@ int main(int argc, char **argv){
         std::cout << mach.debug_decode_out() << '\n';
         mach.execute();
         std::cout << mach.debug_execute_out() << '\n';
+        mach.write_back();
         mach.set_pc(mach.get_pc() + 1);
     }
 

@@ -13,8 +13,8 @@ const int NUM_REGS = 16;
 const int EFLAGS_REG = 14;
 
 const std::string reg[] {
-    "al", "cl", "dl", "bl", "ah", "ch", "dh", "bh", // 8-Bit Registers
-    "ax", "cx", "dx", "bx", "sp", "bp", "si", "di", // 16-Bit Registers
+    "AL", "CL", "DL", "BL", "AH", "CH", "DH", "BH", // 8-Bit Registers
+    "AX", "CX", "DX", "BX", "SP", "BP", "SI", "DI", // 16-Bit Registers
     "NO REG"
 };
 
@@ -47,7 +47,7 @@ class Machine {
 
         friend std::ostream& operator<<(std::ostream &out, const Fetch &fo){
             std::ostringstream sout;
-            sout << "0x" << std::hex << std::setw(2) << std::setfill('0') << fo.opcode;
+            sout << std::hex << "0x" << std::setw(2) << std::setfill('0') << fo.opcode;
             return out << sout.str();
         }
     };
@@ -56,6 +56,7 @@ class Machine {
         std::string instruction;
         int16_t immediate;
         uint16_t reg1;
+        uint16_t register1;
         uint16_t reg2;
         uint16_t leftOperand;
         uint16_t rightOperand;
@@ -75,8 +76,11 @@ class Machine {
         int16_t result;
         friend std::ostream &operator<<(std::ostream &out, const Execute &exe) {
             std::ostringstream sout;
-            // sout << "Operation: " << std::hex << exe.result << '\n';
-            sout << "Result: " << std::hex << exe.result << '\n';
+            sout << "Result: ";
+            if (exe.result == 0xff) {
+                sout << "NO ALU" << '\n';
+            }
+            else sout << std::hex << exe.result << '\n';
             return out << sout.str();
         }
     };
@@ -96,8 +100,9 @@ class Machine {
     T memory_read(int16_t) const;
     template<typename T>
     void memory_write(int16_t, T);
-    template<typename T>
     uint8_t next_byte();
+    void byte_to_word(int16_t*);
+    int16_t dereference_address(int16_t);
     
     // EFLAGS
     void set_carry_flag();
@@ -117,6 +122,7 @@ class Machine {
         void set_pc(int16_t);
         int16_t get_xreg(int) const;
         void set_xreg(int, int16_t);
+        int16_t reg_to_register(uint16_t*);
         
         // INSTRUCTION CYCLE
         void fetch();
