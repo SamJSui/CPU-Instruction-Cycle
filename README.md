@@ -1,5 +1,7 @@
 # **CPU Instruction Cycle**
 
+[Here](https://samjsui.github.io/blog/2022/cpu-instruction-cycle-project/)
+
 ## **Description**
 
 A C++ program written to simulate a CPU and its instruction cycle:

@@ -92,7 +92,6 @@ bool Machine::check_sign_flag(){
 
 // FETCH
 void Machine::fetch() {
-    // std::cout << std::dec << '<' << get_pc() << "> ";
     fetchObj.opcode = memory_read<uint8_t>(programCounter);
 }
 Machine::Fetch &Machine::debug_fetch_out() { 
