@@ -20,6 +20,8 @@ A C++ program written to simulate a CPU and its instruction cycle:
 ### Prerequisites
 - g++ 
     - `sudo apt install g++`
+- make
+    - `sudo apt install make`
 - nasm
     - `sudo apt install nasm`
 - qemu (optional)

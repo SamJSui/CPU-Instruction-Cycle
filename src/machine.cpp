@@ -247,12 +247,12 @@ Machine::Execute &Machine::debug_execute_out() {
     return executeObj; 
 }
 
-// MEMORY
-void Machine::memory_access() {
-}
-Machine::Memory &Machine::debug_memory_out() { 
-    return memoryObj; 
-}
+// // MEMORY
+// void Machine::memory_access() {
+// }
+// Machine::Memory &Machine::debug_memory_out() { 
+//     return memoryObj; 
+// }
 
 // WRITEBACK
 void Machine::write_back() {

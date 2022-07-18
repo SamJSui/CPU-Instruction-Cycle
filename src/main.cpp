@@ -19,10 +19,15 @@ int main(int argc, char **argv){
     ifs.clear(); // Clear error flags and return back to top of file for reading
     ifs.seekg (0, ifs.beg); 
 
+    if (fileSize > MEM_SIZE) {
+        std::cerr << "File is too big\n";
+        return 1;
+    }
+
     char* buffer = new char[MEM_SIZE]; // Initialize and read in binary file into char buffer
     ifs.read(buffer, fileSize);
 
-    Machine mach(buffer, MEM_SIZE);
+    Machine mach(buffer, fileSize);
     while (mach.get_pc() < fileSize) {
         mach.fetch();
         // std::cout << mach.debug_fetch_out() << '\n';

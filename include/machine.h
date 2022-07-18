@@ -129,8 +129,8 @@ class Machine {
         void write_back();
         Fetch &debug_fetch_out();
         Decode &debug_decode_out();
-        // Execute &debug_execute_out();
-        Memory &debug_memory_out();
+        Execute &debug_execute_out();
+        // Memory &debug_memory_out();
 };
 
 #endif
